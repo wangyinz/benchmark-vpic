@@ -8,6 +8,61 @@ MPI_NAME=impi
 M_VER=18.0.2
 COMPILE_FLAG=-xHASWELL
 
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -m|--machine)
+    MACHINE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -a|--architecture)
+    ARCH="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -c|--compiler)
+    COMPILER="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -cv|--c_version)
+    C_VER="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -m|--mpi)
+    MPI_NAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -mv|--m_version)
+    M_VER="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -f|--flag)
+    COMPILE_FLAG="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [[ -n $1 ]]; then
+    echo "Last line of file specified as non-opt/last argument:"
+    tail -1 "$1"
+fi
+
+
 module purge
 module reset
 module load $COMPILER/$C_VER
