@@ -1,0 +1,4 @@
+[submodule "vpic"]
+	path = vpic
+	url = https://github.com/lanl/vpic.git
+	branch = v407
