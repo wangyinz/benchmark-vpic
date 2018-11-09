@@ -19,6 +19,7 @@ cd build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_
 
 if [ ! -f ../vpic/configure ]; then
   echo "configure not found!"
+  git submodule update --init
   git submodule update --remote
   echo "try bootstrap..."
   cd ../vpic/
