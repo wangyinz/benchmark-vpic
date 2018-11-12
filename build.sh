@@ -10,6 +10,7 @@ COMPILE_FLAG=-xHASWELL
 N_TEST=0
 N_TASK=0
 NO_BUILD=0
+QUEUE=normal
 HELP=0
 
 POSITIONAL=()
@@ -63,6 +64,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -q|--queue)
+    QUEUE="$2"
+    shift # past argument
+    shift # past value
+    ;;
     -nb|--no-build)
     NO_BUILD=1
     shift # past argument
@@ -97,11 +103,12 @@ if [ "$HELP" -eq "1" ]; then
   echo "  -f  | --flag		  : architecture related compiling flag"
   echo "  -t  | --test		  : create and run test with given number"
   echo "  -n  | --ntasks-per-node : tasks per node for the test"
+  echo "  -q  | --queue		  : queue to submit the job"
   echo "  -nb | --no-build	  : skip the build steps"
   echo ""
   echo "Examples:"
   echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\""
-  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16"
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16 -q normal"
   exit
 fi
   
@@ -110,8 +117,11 @@ module reset
 module load $COMPILER/$C_VER
 module load $MPI_NAME/$M_VER
 
-mkdir build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
-cd build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+TEMP_V=${COMPILE_FLAG// /_}
+COMPILE_F=${TEMP_V//,/}
+
+mkdir build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
+cd build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
 
 if [ "$NO_BUILD" -eq "0" ]; then
   module load autotools
@@ -122,21 +132,21 @@ if [ "$NO_BUILD" -eq "0" ]; then
     echo "try bootstrap..."
     cd ../vpic/
     ./config/bootstrap
-    cd ../build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+    cd ../build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
   fi
   
-  ../vpic/configure CC=mpicc CXX=mpicxx CFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer" CXXFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer -DUSE_V4_SSE -DOMPI_SKIP_MPICXX" MPI_LIBS=" " EXTENSION=${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+  ../vpic/configure CC=mpicc CXX=mpicxx CFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer" CXXFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer -DUSE_V4_SSE -DOMPI_SKIP_MPICXX" MPI_LIBS=" " EXTENSION=${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
   
   make -j 8
 fi
 
 if [ "$N_TEST" -ne "0" ]; then
   if [ -f ../input_files/test_${N_TEST}.cxx ] && \
-     [ -f build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_} ]; then
+     [ -f build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ]; then
     cp ../input_files/test_${N_TEST}.cxx ./
-    ./build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_} ./test_${N_TEST}.cxx
+    ./build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ./test_${N_TEST}.cxx
     mkdir -p ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
-    cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
+    cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
 
     if [ "$N_TASK" -ne "0" ] && [ "$(($N_TEST%$N_TASK))" -eq "0" ]; then
       cd ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
@@ -146,11 +156,11 @@ if [ "$N_TEST" -ne "0" ]; then
 #SBATCH -o vpic_1152.%j 
 #SBATCH -N $(($N_TEST/$N_TASK))
 #SBATCH --ntasks-per-node ${N_TASK}
-#SBATCH -p normal
+#SBATCH -p ${QUEUE}
 #SBATCH -t 03:00:00
 #SBATCH -A A-ccsc
 
-export vpicexe=${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+export vpicexe=${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
 export NP=${N_TEST}
 export NPPNODE=${N_TASK}
 
