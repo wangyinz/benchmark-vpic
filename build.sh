@@ -7,6 +7,9 @@ C_VER=18.0.2
 MPI_NAME=impi
 M_VER=18.0.2
 COMPILE_FLAG=-xHASWELL
+N_TEST=0
+N_TASK=0
+NO_BUILD=0
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -49,6 +52,20 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -t|--test)
+    N_TEST="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -n|--ntasks-per-node)
+    N_TASK="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -nb|--no-build)
+    NO_BUILD=1
+    shift # past argument
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -67,21 +84,65 @@ module purge
 module reset
 module load $COMPILER/$C_VER
 module load $MPI_NAME/$M_VER
-module load autotools
 
 mkdir build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
 cd build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
 
-if [ ! -f ../vpic/configure ]; then
-  echo "configure not found!"
-  git submodule update --init
-  git submodule update --remote
-  echo "try bootstrap..."
-  cd ../vpic/
-  ./config/bootstrap
-  cd ../build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+if [ "$NO_BUILD" -eq "0" ]; then
+  module load autotools
+  if [ ! -f ../vpic/configure ]; then
+    echo "configure not found!"
+    git submodule update --init
+    git submodule update --remote
+    echo "try bootstrap..."
+    cd ../vpic/
+    ./config/bootstrap
+    cd ../build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+  fi
+  
+  ../vpic/configure CC=mpicc CXX=mpicxx CFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer" CXXFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer -DUSE_V4_SSE -DOMPI_SKIP_MPICXX" MPI_LIBS=" " EXTENSION=${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+  
+  make -j 8
 fi
 
-../vpic/configure CC=mpicc CXX=mpicxx CFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer" CXXFLAGS="-O3 ${COMPILE_FLAG} -fno-strict-aliasing -fomit-frame-pointer -DUSE_V4_SSE -DOMPI_SKIP_MPICXX" MPI_LIBS=" " EXTENSION=${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+if [ "$N_TEST" -ne "0" ]; then
+  if [ -f ../input_files/test_${N_TEST}.cxx ] && \
+     [ -f build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_} ]; then
+    cp ../input_files/test_${N_TEST}.cxx ./
+    ./build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_} ./test_${N_TEST}.cxx
+    mkdir -p ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
+    cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
 
-make -j 8
+    if [ "$N_TASK" -ne "0" ] && [ "$(($N_TEST%$N_TASK))" -eq "0" ]; then
+      cd ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
+      cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job.sh << EOF
+#!/bin/bash
+#SBATCH -J vpic_1152_$(($N_TEST/$N_TASK))
+#SBATCH -o vpic_1152.%j 
+#SBATCH -N $(($N_TEST/$N_TASK))
+#SBATCH --ntasks-per-node ${N_TASK}
+#SBATCH -p normal
+#SBATCH -t 03:00:00
+#SBATCH -A A-ccsc
+
+export vpicexe=${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_FLAG// /_}
+export NP=${N_TEST}
+export NPPNODE=${N_TASK}
+
+module purge
+module load $COMPILER/$C_VER
+module load $MPI_NAME/$M_VER
+
+mkdir \${SLURM_JOBID}
+cd \${SLURM_JOBID}
+
+date
+time ibrun tacc_affinity \${vpicexe} -tpp=1
+
+cp ../vpic_job.sh .
+EOF
+      sbatch ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job.sh
+    fi
+
+  fi
+fi
