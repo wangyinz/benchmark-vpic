@@ -10,6 +10,7 @@ COMPILE_FLAG=-xHASWELL
 N_TEST=0
 N_TASK=0
 NO_BUILD=0
+HELP=0
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -66,6 +67,10 @@ case $key in
     NO_BUILD=1
     shift # past argument
     ;;
+    -h|--help)
+    HELP=1
+    shift # past argument
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -80,6 +85,26 @@ if [[ -n $1 ]]; then
 fi
 
 
+if [ "$HELP" -eq "1" ]; then
+  echo "Usage: $0 [-options]"
+  echo "  -h  | --help	    	  : This message "
+  echo "  -m  | --machin    	  : name of this machine" 
+  echo "  -a  | --architecture    : name of target architecture" 
+  echo "  -c  | --compiler	  : compiler to build with"  
+  echo "  -cv | --c_version	  : version of the compiler"
+  echo "  -m  | --mpi     	  : MPI to to build with"
+  echo "  -mv | --m_version	  : version of the MPI"
+  echo "  -f  | --flag		  : architecture related compiling flag"
+  echo "  -t  | --test		  : create and run test with given number"
+  echo "  -n  | --ntasks-per-node : tasks per node for the test"
+  echo "  -nb | --no-build	  : skip the build steps"
+  echo ""
+  echo "Examples:"
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\""
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16"
+  exit
+fi
+  
 module purge
 module reset
 module load $COMPILER/$C_VER
