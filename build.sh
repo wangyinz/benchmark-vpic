@@ -39,7 +39,7 @@ case $key in
     shift # past argument
     shift # past value
     ;;
-    -m|--mpi)
+    -mp|--mpi)
     MPI_NAME="$2"
     shift # past argument
     shift # past value
@@ -98,7 +98,7 @@ if [ "$HELP" -eq "1" ]; then
   echo "  -a  | --architecture    : name of target architecture" 
   echo "  -c  | --compiler	  : compiler to build with"  
   echo "  -cv | --c_version	  : version of the compiler"
-  echo "  -m  | --mpi     	  : MPI to to build with"
+  echo "  -mp | --mpi     	  : MPI to to build with"
   echo "  -mv | --m_version	  : version of the MPI"
   echo "  -f  | --flag		  : architecture related compiling flag"
   echo "  -t  | --test		  : create and run test with given number"
@@ -107,8 +107,8 @@ if [ "$HELP" -eq "1" ]; then
   echo "  -nb | --no-build	  : skip the build steps"
   echo ""
   echo "Examples:"
-  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\""
-  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -m impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16 -q normal"
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\""
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16 -q normal"
   exit
 fi
   
