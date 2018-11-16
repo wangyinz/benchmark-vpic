@@ -4,7 +4,11 @@ This repository containsthe files needed to build the VPIC (Vector Particle-In-C
 
 ## Deployment
 
-The `build.sh` will automatically create a new directory and perform an out-of-tree build there. Users can modify the script and specify the version of compiler, MPI, and architecture related flag for the build.
+The `build.sh` will automatically create a new directory and perform an out-of-tree build there. It can also automatically create and submit a user specified test. Users can specify the version of compiler, MPI, and architecture related flag for the build. For the usage of the script, please run:
+
+```
+./build.sh -h
+```
 
 ## Notes
 
