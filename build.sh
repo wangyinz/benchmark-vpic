@@ -94,16 +94,16 @@ fi
 if [ "$HELP" -eq "1" ]; then
   echo "Usage: $0 [-options]"
   echo "  -h  | --help	    	  : This message "
-  echo "  -m  | --machin    	  : name of this machine" 
-  echo "  -a  | --architecture    : name of target architecture" 
-  echo "  -c  | --compiler	  : compiler to build with"  
-  echo "  -cv | --c_version	  : version of the compiler"
-  echo "  -mp | --mpi     	  : MPI to to build with"
-  echo "  -mv | --m_version	  : version of the MPI"
-  echo "  -f  | --flag		  : architecture related compiling flag"
+  echo "  -m  | --machine    	  : name of this machine (hikari)" 
+  echo "  -a  | --architecture    : name of target architecture (hwl)" 
+  echo "  -c  | --compiler	  : compiler to build with (intel)"
+  echo "  -cv | --c_version	  : version of the compiler (18.0.2)"
+  echo "  -mp | --mpi     	  : MPI to to build with (impi)"
+  echo "  -mv | --m_version	  : version of the MPI (18.0.2)"
+  echo "  -f  | --flag		  : architecture related flag (-xHASWELL)"
   echo "  -t  | --test		  : create and run test with given number"
   echo "  -n  | --ntasks-per-node : tasks per node for the test"
-  echo "  -q  | --queue		  : queue to submit the job"
+  echo "  -q  | --queue		  : queue to submit the job (normal)"
   echo "  -nb | --no-build	  : skip the build steps"
   echo ""
   echo "Examples:"
@@ -145,10 +145,10 @@ if [ "$N_TEST" -ne "0" ]; then
      [ -f build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ]; then
     cp ../input_files/test_${N_TEST}.cxx ./
     ./build.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ./test_${N_TEST}.cxx
-    mkdir -p ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
-    cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
 
     if [ "$N_TASK" -ne "0" ] && [ "$(($N_TEST%$N_TASK))" -eq "0" ]; then
+      mkdir -p ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
+      cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
       cd ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
       cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job.sh << EOF
 #!/bin/bash
@@ -177,7 +177,11 @@ time ibrun tacc_affinity \${vpicexe} -tpp=1
 cp ../vpic_job.sh .
 EOF
       sbatch ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job.sh
+    else
+      echo "warning: ntasks-per-node is not currectly given!"
+      echo "  test number should be divisible by ntasks-per-node"
     fi
-
+  else
+    echo "warning: cannot find the specified test or build!"
   fi
 fi
