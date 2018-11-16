@@ -14,9 +14,9 @@ The `build.sh` will automatically create a new directory and perform an out-of-t
 
 The `input_files` directory contains the standard test problems from the SPP benchmark. The number in the filename indicats how many tasks should be requested for the test.  They are from multiplying topology_x, topology_y and topology_z. Note that all the topology should be evenly devided by their corresponding nx, ny, nz.
 
-nx,ny,nz and Lz,Ly,Lz determine the size (complexity) of the problem. Changing topology to fit the same problem  into different number of nodes.
+nx,ny,nz and Lz,Ly,Lz determine the size (complexity) of the problem. Changing topology to fit the same problem into different number of nodes.
 
-There are only two problems (small test and large test) included here:
+There are two problems (small test and large test) from the original SPP benchmarks included here:
 
 ```
   double Lx            = 300*di; 
@@ -40,3 +40,18 @@ and
   double nz = 1536;
 ```
 
+Another problem modified from the small test is also included to make it fit onto one node. Note that nx,ny,nz are set to some special numbers so that some chips with an uncommon core count (e.g. knl) can be better utilized.
+
+```
+  double Lx            = 300*di;
+  double Ly            = 300*di;
+  double Lz            = 50*di;
+
+  double topology_x = 2;  
+  double topology_y = 2;
+  double topology_z = 2;  
+
+  double nx = 210;
+  double ny = 170;
+  double nz = 100;
+```
