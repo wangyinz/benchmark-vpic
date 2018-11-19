@@ -12,6 +12,7 @@ N_TASK=0
 N_THREAD=1
 NO_BUILD=0
 QUEUE=normal
+R_TIME=02:00:00
 HELP=0
 
 POSITIONAL=()
@@ -55,7 +56,7 @@ case $key in
     shift # past argument
     shift # past value
     ;;
-    -t|--test)
+    -rt|--run-test)
     N_TEST="$2"
     shift # past argument
     shift # past value
@@ -67,6 +68,11 @@ case $key in
     ;;
     -tr|--nthreads)
     N_THREAD="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -t|--time)
+    R_TIME="$2"
     shift # past argument
     shift # past value
     ;;
@@ -107,15 +113,16 @@ if [ "$HELP" -eq "1" ]; then
   echo "  -mp | --mpi     	  : MPI to to build with (impi)"
   echo "  -mv | --m_version	  : version of the MPI (18.0.2)"
   echo "  -f  | --flag		  : architecture related flag (-xHASWELL)"
-  echo "  -t  | --test		  : create and run test with given number"
+  echo "  -rt | --run-test	  : create and run test with given number"
   echo "  -n  | --ntasks-per-node : tasks per node for the test"
   echo "  -tr | --nthreads	  : number of threads for the test (1)"
+  echo "  -t  | --time		  : time requested for the run (03:00:00)"
   echo "  -q  | --queue		  : queue to submit the job (normal)"
   echo "  -nb | --no-build	  : skip the build steps"
   echo ""
   echo "Examples:"
   echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\""
-  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16 -tr 4 -q normal"
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -rt 1152 -n 16 -tr 4 -t 03:00:00 -q normal"
   exit
 fi
   
@@ -164,7 +171,7 @@ if [ "$N_TEST" -ne "0" ]; then
 #SBATCH -N $(($N_TEST/$N_TASK))
 #SBATCH --ntasks-per-node ${N_TASK}
 #SBATCH -p ${QUEUE}
-#SBATCH -t 03:00:00
+#SBATCH -t ${R_TIME}
 #SBATCH -A A-ccsc
 
 export OMP_NUM_THREADS=${N_THREAD}
