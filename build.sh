@@ -9,6 +9,7 @@ M_VER=18.0.2
 COMPILE_FLAG=-xHASWELL
 N_TEST=0
 N_TASK=0
+N_THREAD=1
 NO_BUILD=0
 QUEUE=normal
 HELP=0
@@ -64,6 +65,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -tr|--nthreads)
+    N_THREAD="$2"
+    shift # past argument
+    shift # past value
+    ;;
     -q|--queue)
     QUEUE="$2"
     shift # past argument
@@ -103,12 +109,13 @@ if [ "$HELP" -eq "1" ]; then
   echo "  -f  | --flag		  : architecture related flag (-xHASWELL)"
   echo "  -t  | --test		  : create and run test with given number"
   echo "  -n  | --ntasks-per-node : tasks per node for the test"
+  echo "  -tr | --nthreads	  : number of threads for the test (1)"
   echo "  -q  | --queue		  : queue to submit the job (normal)"
   echo "  -nb | --no-build	  : skip the build steps"
   echo ""
   echo "Examples:"
   echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\""
-  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16 -q normal"
+  echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -t 1152 -n 16 -tr 4 -q normal"
   exit
 fi
   
@@ -152,13 +159,15 @@ if [ "$N_TEST" -ne "0" ]; then
       cd ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
       cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job.sh << EOF
 #!/bin/bash
-#SBATCH -J vpic_1152_$(($N_TEST/$N_TASK))
-#SBATCH -o vpic_1152.%j 
+#SBATCH -J vpic_${N_TEST}_$(($N_TEST/$N_TASK))
+#SBATCH -o vpic_${N_TEST}.%j 
 #SBATCH -N $(($N_TEST/$N_TASK))
 #SBATCH --ntasks-per-node ${N_TASK}
 #SBATCH -p ${QUEUE}
 #SBATCH -t 03:00:00
 #SBATCH -A A-ccsc
+
+export OMP_NUM_THREADS=${N_THREAD}
 
 export vpicexe=${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
 export NP=${N_TEST}
@@ -172,7 +181,7 @@ mkdir \${SLURM_JOBID}
 cd \${SLURM_JOBID}
 
 date
-time ibrun tacc_affinity \${vpicexe} -tpp=1
+time ibrun tacc_affinity \${vpicexe} -tpp=${N_THREAD}
 
 cp ../vpic_job.sh .
 EOF
