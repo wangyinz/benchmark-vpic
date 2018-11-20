@@ -164,9 +164,9 @@ if [ "$N_TEST" -ne "0" ]; then
       mkdir -p ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
       cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
       cd ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
-      cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK)).sh << EOF
+      cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh << EOF
 #!/bin/bash
-#SBATCH -J vpic_${N_TEST}_$(($N_TEST/$N_TASK))
+#SBATCH -J vpic_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}
 #SBATCH -o vpic_${N_TEST}.%j 
 #SBATCH -N $(($N_TEST/$N_TASK))
 #SBATCH --ntasks-per-node ${N_TASK}
@@ -190,9 +190,9 @@ cd \${SLURM_JOBID}
 date
 time ibrun tacc_affinity \${vpicexe} -tpp=${N_THREAD}
 
-cp ../vpic_job_${N_TEST}_$(($N_TEST/$N_TASK)).sh .
+cp ../vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh .
 EOF
-      sbatch ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK)).sh
+      sbatch ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh
     else
       echo "warning: ntasks-per-node is not currectly given!"
       echo "  test number should be divisible by ntasks-per-node"
