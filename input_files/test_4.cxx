@@ -100,7 +100,7 @@ begin_initialization {
 
   double topology_x = 2;  // Number of domains in x, y, and z
   double topology_y = 2;
-  double topology_z = 2;  // For load balance, best to keep "1" or "2" for Harris sheet
+  double topology_z = 1;  // For load balance, best to keep "1" or "2" for Harris sheet
 
   double nx = 420;
   double ny = 340;
