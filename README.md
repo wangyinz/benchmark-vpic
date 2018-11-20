@@ -43,15 +43,17 @@ and
 Another problem modified from the small test is also included to make it fit onto one node. Note that nx,ny,nz are set to some special numbers so that some chips with an uncommon core count (e.g. knl) can be better utilized.
 
 ```
-  double Lx            = 300*di;
-  double Ly            = 300*di;
+  double nppc          = 70;
+
+  double Lx            = 420*di;
+  double Ly            = 340*di;
   double Lz            = 50*di;
 
   double topology_x = 2;  
   double topology_y = 2;
   double topology_z = 2;  
 
-  double nx = 210;
-  double ny = 170;
-  double nz = 100;
+  double nx = 420;
+  double ny = 340;
+  double nz = 50;
 ```
