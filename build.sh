@@ -167,7 +167,7 @@ if [ "$N_TEST" -ne "0" ]; then
       cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh << EOF
 #!/bin/bash
 #SBATCH -J vpic_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}
-#SBATCH -o vpic_${N_TEST}.%j 
+#SBATCH -o vpic_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.%j 
 #SBATCH -N $(($N_TEST/$N_TASK))
 #SBATCH --ntasks-per-node ${N_TASK}
 #SBATCH -p ${QUEUE}
@@ -188,7 +188,7 @@ mkdir \${SLURM_JOBID}
 cd \${SLURM_JOBID}
 
 date
-time ibrun tacc_affinity \${vpicexe} -tpp=${N_THREAD}
+time -p ibrun tacc_affinity \${vpicexe} -tpp=${N_THREAD}
 
 cp ../vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh .
 EOF
