@@ -40,7 +40,21 @@ and
   double nz = 1536;
 ```
 
-Another problem modified from the small test is also included to make it fit onto one node. Note that nx,ny,nz are set to some special numbers so that some chips with an uncommon core count (e.g. knl) can be better utilized.
+Another problem modified from the small test is also included to make it fit onto one node and scale up to 6 nodes. Note that nx,ny,nz are set to some special numbers so that some chips with an uncommon core count (e.g. knl) can be better utilized.
+
+```
+  double nppc          = 70;
+
+  double Lx            = 680*di;
+  double Ly            = 504*di;
+  double Lz            = 50*di;
+
+  double nx = 680;
+  double ny = 504;
+  double nz = 50;
+```
+
+Below is another small test problem that is included in `input_files/old_single_node_tests/`, which is too small to scale to more than one node, but was used for some benchmarks before. They are retained for records only.
 
 ```
   double nppc          = 70;
@@ -48,10 +62,6 @@ Another problem modified from the small test is also included to make it fit ont
   double Lx            = 420*di;
   double Ly            = 340*di;
   double Lz            = 50*di;
-
-  double topology_x = 2;  
-  double topology_y = 2;
-  double topology_z = 2;  
 
   double nx = 420;
   double ny = 340;
