@@ -8,6 +8,9 @@ MPI_NAME=impi
 M_VER=18.0.2
 COMPILE_FLAG=-xHASWELL
 N_TEST=0
+N_NODE=0
+SET_NODE=0
+NN_TASK=0
 N_TASK=0
 N_THREAD=1
 NO_BUILD=0
@@ -61,8 +64,14 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -N|--node)
+    SET_NODE=1
+    N_NODE="$2"
+    shift # past argument
+    shift # past value
+    ;;
     -n|--ntasks-per-node)
-    N_TASK="$2"
+    NN_TASK="$2"
     shift # past argument
     shift # past value
     ;;
@@ -114,6 +123,7 @@ if [ "$HELP" -eq "1" ]; then
   echo "  -mv | --m_version	  : version of the MPI (18.0.2)"
   echo "  -f  | --flag		  : architecture related flag (-xHASWELL)"
   echo "  -rt | --run-test	  : create and run test with given number"
+  echo "  -N  | --node		  : number of nodes for the test (optional)"
   echo "  -n  | --ntasks-per-node : tasks per node for the test"
   echo "  -tr | --nthreads	  : number of threads for the test (1)"
   echo "  -t  | --time		  : time requested for the run (03:00:00)"
@@ -125,6 +135,11 @@ if [ "$HELP" -eq "1" ]; then
   echo "  ./build.sh -m s2 -a knl -c intel -cv 18.0.2 -mp impi -mv 18.0.2 -f \"-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512\" -nb -rt 1152 -n 16 -tr 4 -t 03:00:00 -q normal"
   exit
 fi
+
+if [ "$SET_NODE" -eq "0" ]; then
+  N_NODE=$(($N_TEST/$NN_TASK))
+fi
+N_TASK=${N_TEST}
   
 module purge
 module reset
@@ -164,12 +179,12 @@ if [ "$N_TEST" -ne "0" ]; then
       mkdir -p ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
       cp test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F} ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/
       cd ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}
-      cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh << EOF
+      cat > ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_${N_NODE}_${N_THREAD}.sh << EOF
 #!/bin/bash
-#SBATCH -J vpic_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}
-#SBATCH -o vpic_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.%j 
-#SBATCH -N $(($N_TEST/$N_TASK))
-#SBATCH --ntasks-per-node ${N_TASK}
+#SBATCH -J vpic_${N_TEST}_${N_NODE}_${N_THREAD}
+#SBATCH -o vpic_${N_TEST}_${N_NODE}_${N_THREAD}.%j 
+#SBATCH -N ${N_NODE}
+#SBATCH -n ${N_TASK}
 #SBATCH -p ${QUEUE}
 #SBATCH -t ${R_TIME}
 #SBATCH -A A-ccsc
@@ -178,7 +193,7 @@ export OMP_NUM_THREADS=${N_THREAD}
 
 export vpicexe=${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/test_${N_TEST}.${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
 export NP=${N_TEST}
-export NPPNODE=${N_TASK}
+export NPPNODE=${NN_TASK}
 
 module purge
 module load $COMPILER/$C_VER
@@ -190,9 +205,9 @@ cd \${SLURM_JOBID}
 date
 time -p ibrun tacc_affinity \${vpicexe} -tpp=${N_THREAD}
 
-cp ../vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh .
+cp ../vpic_job_${N_TEST}_${N_NODE}_${N_THREAD}.sh .
 EOF
-      sbatch ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_$(($N_TEST/$N_TASK))_${N_THREAD}.sh
+      sbatch ${SCRATCH}/benchmarks/vpic/${ARCH}/${N_TEST}/vpic_job_${N_TEST}_${N_NODE}_${N_THREAD}.sh
     else
       echo "warning: ntasks-per-node is not currectly given!"
       echo "  test number should be divisible by ntasks-per-node"
