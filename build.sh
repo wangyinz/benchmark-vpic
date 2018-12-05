@@ -147,7 +147,8 @@ module load $COMPILER/$C_VER
 module load $MPI_NAME/$M_VER
 
 TEMP_V=${COMPILE_FLAG// /_}
-COMPILE_F=${TEMP_V//,/}
+TEMP_V2=${TEMP_V//=/}
+COMPILE_F=${TEMP_V2//,/}
 
 mkdir build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
 cd build_${MACHINE}_${ARCH}_${COMPILER}-${C_VER}_${MPI_NAME}-${M_VER}_${COMPILE_F}
