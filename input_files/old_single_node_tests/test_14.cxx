@@ -94,16 +94,16 @@ begin_initialization {
 
   double nppc          = 70; // Average number of macro particle per cell per species
 
-  double Lx            = 680*di; // size of box in x dimension
-  double Ly            = 504*di;  // size of box in y dimension
+  double Lx            = 420*di; // size of box in x dimension
+  double Ly            = 340*di;  // size of box in y dimension
   double Lz            = 50*di; // size of box in z dimension
 
-  double topology_x = 4;  // Number of domains in x, y, and z
-  double topology_y = 7;
+  double topology_x = 7;  // Number of domains in x, y, and z
+  double topology_y = 1;
   double topology_z = 2;  // For load balance, best to keep "1" or "2" for Harris sheet
 
-  double nx = 680;
-  double ny = 504;
+  double nx = 420;
+  double ny = 340;
   double nz = 50;
 
   double hx = Lx/nx;

@@ -99,7 +99,7 @@ begin_initialization {
   double Lz            = 50*di; // size of box in z dimension
 
   double topology_x = 4;  // Number of domains in x, y, and z
-  double topology_y = 7;
+  double topology_y = 21;
   double topology_z = 2;  // For load balance, best to keep "1" or "2" for Harris sheet
 
   double nx = 680;

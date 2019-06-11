@@ -94,16 +94,16 @@ begin_initialization {
 
   double nppc          = 70; // Average number of macro particle per cell per species
 
-  double Lx            = 420*di; // size of box in x dimension
-  double Ly            = 340*di;  // size of box in y dimension
+  double Lx            = 680*di; // size of box in x dimension
+  double Ly            = 504*di;  // size of box in y dimension
   double Lz            = 50*di; // size of box in z dimension
 
   double topology_x = 1;  // Number of domains in x, y, and z
   double topology_y = 1;
   double topology_z = 1;  // For load balance, best to keep "1" or "2" for Harris sheet
 
-  double nx = 420;
-  double ny = 340;
+  double nx = 680;
+  double ny = 504;
   double nz = 50;
 
   double hx = Lx/nx;
@@ -237,6 +237,12 @@ begin_initialization {
 
   double electron_sort_interval = 25;
   double ion_sort_interval = 25;
+
+  printf("DEBUG##########\n");
+  printf("%f\n", Ne);
+  printf("%f\n", nproc());
+  printf("%d\n", (int)(2.0*Ne/nproc()));
+
   species_t *electron = define_species("electron",-ec/me,2.0*Ne/nproc(),-1,electron_sort_interval,0);
   species_t *ion = define_species("ion", ec/mi,2.0*Ne/nproc(),-1,ion_sort_interval,0);
 
